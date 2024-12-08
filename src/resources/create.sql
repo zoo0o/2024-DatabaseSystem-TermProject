@@ -31,7 +31,7 @@ CREATE TABLE clubmember (
                             sid INT,
                             cid INT,
                             join_date DATE,
-                            role VARCHAR(50),
+                            role VARCHAR(50) DEFAULT 'member',
                             PRIMARY KEY (sid, cid),
                             FOREIGN KEY (sid) REFERENCES student(sid),
                             FOREIGN KEY (cid) REFERENCES club(cid)
