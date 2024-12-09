@@ -75,9 +75,11 @@ public class SignIn {
         switch (userType) {
             case 1:
                 System.out.println("Access granted: Student.");
+                studentOptions(userId, connection);
                 break;
             case 2:
                 System.out.println("Access granted: Professor.");
+                professorOptions(userId, connection);
                 break;
             case 3:
                 System.out.println("Access granted: Assistant.");
@@ -88,6 +90,51 @@ public class SignIn {
         }
     }
 
+    private static void studentOptions(int userId, Connection connection) {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n=== Student Options ===");
+            System.out.println("1. View Club List");
+            System.out.println("2. Sign Out");
+            System.out.print("Select option: ");
+            int option = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (option) {
+                case 1:
+                    ViewClubs.viewClubList(connection);
+                    break;
+                case 2:
+                    return;
+                default:
+                    System.out.println("Invalid selection.");
+            }
+        }
+    }
+
+    private static void professorOptions(int userId, Connection connection) {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n=== Professor Options ===");
+            System.out.println("1. View Club List");
+            System.out.println("2. Sign Out");
+            System.out.print("Select option: ");
+            int option = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (option) {
+                case 1:
+                    ViewClubs.viewClubList(connection);
+                    break;
+                case 2:
+                    return;
+                default:
+                    System.out.println("Invalid selection.");
+            }
+        }
+    }
     private static void assistantOptions(int userId, Connection connection) {
         Scanner scanner = new Scanner(System.in);
 
