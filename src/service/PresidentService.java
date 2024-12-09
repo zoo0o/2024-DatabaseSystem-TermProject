@@ -2,6 +2,7 @@ package service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Scanner;
 
 public class PresidentService {
@@ -82,4 +83,33 @@ public class PresidentService {
             }
         }
     }
+
+    public static void viewMyClubMembers(int clubId, Connection connection) {
+        String query = "SELECT s.sid, s.name, s.department, s.status, s.phone " +
+                "FROM clubmember cm " +
+                "JOIN student s ON cm.sid = s.sid " +
+                "WHERE cm.cid = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, clubId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                System.out.println("\n=== Members of Your Club ===");
+                System.out.println("ID | Name | Department | Status | Phone");
+                while (rs.next()) {
+                    int studentId = rs.getInt("sid");
+                    String name = rs.getString("name");
+                    String department = rs.getString("department");
+                    String status = rs.getString("status");
+                    String phone = rs.getString("phone");
+
+                    System.out.println(studentId + " | " + name + " | " + department + " | " + status + " | " + phone);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching club members.");
+            e.printStackTrace();
+        }
+    }
+
 }

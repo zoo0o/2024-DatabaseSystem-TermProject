@@ -272,13 +272,13 @@ public class AuthService {
                         System.out.println("Invalid selection.");
                     }
                     break;
-//                case 7:
-//                    if (isPresident) {
-//                        PresidentService.viewClubMembers(clubId, connection);
-//                    } else {
-//                        System.out.println("Invalid selection.");
-//                    }
-//                    break;
+                case 7:
+                    if (isPresident) {
+                        PresidentService.viewMyClubMembers(clubId, connection);
+                    } else {
+                        System.out.println("Invalid selection.");
+                    }
+                    break;
 //                case 8:
 //                    if (isPresident) {
 //                        PresidentService.manageDocuments(clubId, connection);
