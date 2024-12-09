@@ -1,4 +1,4 @@
-package Main;
+import service.AuthService;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -41,10 +41,10 @@ public class Main {
 
                 switch (option) {
                     case 1:
-                        SignUp.signUp(connection);
+                        AuthService.signUp(connection);
                         break;
                     case 2:
-                        SignIn.signIn(connection);
+                        AuthService.signIn(connection);
                         break;
                     case 3:
                         System.out.println("Exiting program!");

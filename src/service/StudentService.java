@@ -1,11 +1,11 @@
-package Main;
+package service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Scanner;
 
-public class JoinClub {
+public class StudentService {
 
     public static void joinClub(int studentId, Connection connection) {
         Scanner scanner = new Scanner(System.in);
@@ -39,6 +39,63 @@ public class JoinClub {
         }
     }
 
+    public static void viewMyClubs(int studentId, Connection connection) {
+        String query = "SELECT c.name, c.location, c.is_academic FROM club c " +
+                "JOIN clubmember cm ON c.cid = cm.cid WHERE cm.sid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, studentId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                System.out.println("\n=== My Clubs ===");
+                while (rs.next()) {
+                    String clubName = rs.getString("name");
+                    String location = rs.getString("location");
+                    boolean isAcademic = rs.getBoolean("is_academic");
+                    System.out.println("Name: " + clubName + ", Location: " + location +
+                            ", Academic: " + (isAcademic ? "Yes" : "No"));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while retrieving my clubs.");
+            e.printStackTrace();
+        }
+    }
+
+    public static void leaveClub(int studentId, Connection connection) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("\n=== Leave Club ===");
+        System.out.print("Enter Club Name to leave: ");
+        String clubName = scanner.nextLine();
+
+        int clubId = getClubIdByName(clubName, connection);
+        if (clubId == -1) {
+            System.out.println("Club not found.");
+            return;
+        }
+
+        if (!isAlreadyMember(studentId, clubId, connection)) {
+            System.out.println("You are not a member of this club.");
+            return;
+        }
+
+        try {
+            String deleteSQL = "DELETE FROM clubmember WHERE sid = ? AND cid = ?";
+            try (PreparedStatement stmt = connection.prepareStatement(deleteSQL)) {
+                stmt.setInt(1, studentId);
+                stmt.setInt(2, clubId);
+                int rows = stmt.executeUpdate();
+                if (rows > 0) {
+                    System.out.println("Successfully left the club.");
+                } else {
+                    System.out.println("Failed to leave the club.");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while leaving the club.");
+            e.printStackTrace();
+        }
+    }
+
     private static int getClubIdByName(String clubName, Connection connection) {
         String query = "SELECT cid FROM club WHERE name = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -61,9 +118,7 @@ public class JoinClub {
             stmt.setInt(1, studentId);
             stmt.setInt(2, clubId);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next() && rs.getInt("count") > 0) {
-                    return true;
-                }
+                return rs.next() && rs.getInt("count") > 0;
             }
         } catch (Exception e) {
             System.out.println("Error occurred while checking membership.");
@@ -77,9 +132,7 @@ public class JoinClub {
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, clubId);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getBoolean("is_academic");
-                }
+                return rs.next() && rs.getBoolean("is_academic");
             }
         } catch (Exception e) {
             System.out.println("Error occurred while checking club type.");
@@ -95,9 +148,7 @@ public class JoinClub {
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next() && rs.getInt("count") > 0) {
-                    return true;
-                }
+                return rs.next() && rs.getInt("count") > 0;
             }
         } catch (Exception e) {
             System.out.println("Error occurred while checking academic club membership.");

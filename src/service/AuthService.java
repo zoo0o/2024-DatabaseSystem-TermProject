@@ -1,11 +1,133 @@
-package Main;
+package service;
+
+import Main.CreateClub;
+import Main.JoinClub;
+import Main.view.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Scanner;
 
-public class SignIn {
+public class AuthService {
+
+    public static void signUp(Connection connection) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("\n=== Sign Up ===");
+        System.out.println("1. Student");
+        System.out.println("2. Professor");
+        System.out.println("3. Assistant");
+        System.out.println("4. Back to Main Options");
+        System.out.print("Select user type: ");
+
+        int userType = scanner.nextInt();
+        scanner.nextLine();
+
+        String tableName = null;
+        String idColumn = null;
+        boolean isStudent = false;
+
+        switch (userType) {
+            case 1:
+                tableName = "student";
+                idColumn = "sid";
+                isStudent = true;
+                break;
+            case 2:
+                tableName = "professor";
+                idColumn = "pid";
+                break;
+            case 3:
+                tableName = "assistant";
+                idColumn = "aid";
+                break;
+            case 4:
+                return;
+            default:
+                System.out.println("Invalid user type.");
+                return;
+        }
+
+        System.out.print("Enter ID: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("Enter Password: ");
+        String password = scanner.nextLine();
+
+        System.out.print("Confirm Password: ");
+        String confirmPassword = scanner.nextLine();
+
+        while (!password.equals(confirmPassword)) {
+            System.out.println("Passwords do not match. Try again.");
+            System.out.print("Enter Password: ");
+            password = scanner.nextLine();
+            System.out.print("Confirm Password: ");
+            confirmPassword = scanner.nextLine();
+        }
+
+        System.out.print("Enter Name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Enter Department: ");
+        String department = scanner.nextLine();
+
+        System.out.print("Enter Phone Number: ");
+        String phone = scanner.nextLine();
+
+        String status = null;
+        if (isStudent) {
+            System.out.println("1. 재학");
+            System.out.println("2. 휴학");
+            System.out.println("3. 졸업");
+            System.out.print("Select status: ");
+            int statusChoice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (statusChoice) {
+                case 1:
+                    status = "재학";
+                    break;
+                case 2:
+                    status = "휴학";
+                    break;
+                case 3:
+                    status = "졸업";
+                    break;
+                default:
+                    System.out.println("Invalid status.");
+                    return;
+            }
+        }
+
+        try {
+            String sql = isStudent
+                    ? "INSERT INTO " + tableName + " (" + idColumn + ", pwd, name, department, status, phone) VALUES (?, ?, ?, ?, ?, ?)"
+                    : "INSERT INTO " + tableName + " (" + idColumn + ", pwd, name, department, phone) VALUES (?, ?, ?, ?, ?)";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, id);
+                statement.setString(2, password);
+                statement.setString(3, name);
+                statement.setString(4, department);
+                if (isStudent) {
+                    statement.setString(5, status);
+                    statement.setString(6, phone);
+                } else {
+                    statement.setString(5, phone);
+                }
+
+                int rows = statement.executeUpdate();
+                if (rows > 0) {
+                    System.out.println("Signed up successfully!");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred during sign up.");
+            e.printStackTrace();
+        }
+    }
 
     public static void signIn(Connection connection) {
         Scanner scanner = new Scanner(System.in);
@@ -96,20 +218,28 @@ public class SignIn {
         while (true) {
             System.out.println("\n=== Student Options ===");
             System.out.println("1. View Club List");
-            System.out.println("2. Join a Club");
-            System.out.println("3. Sign Out");
+            System.out.println("2. View My Club List");
+            System.out.println("3. Join Club");
+            System.out.println("4. Leave Club");
+            System.out.println("5. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
 
             switch (option) {
                 case 1:
-                    ViewClubs.viewClubList(connection);
+                    CommonService.viewClubList(connection);
                     break;
                 case 2:
-                    JoinClub.joinClub(userId, connection);
+                    StudentService.viewMyClubs(userId, connection);
                     break;
                 case 3:
+                    StudentService.joinClub(userId, connection);
+                    break;
+                case 4:
+                    StudentService.leaveClub(userId, connection);
+                    break;
+                case 5:
                     return;
                 default:
                     System.out.println("Invalid selection.");
@@ -130,7 +260,7 @@ public class SignIn {
 
             switch (option) {
                 case 1:
-                    ViewClubs.viewClubList(connection);
+                    CommonService.viewClubList(connection);
                     break;
                 case 2:
                     return;
@@ -158,22 +288,22 @@ public class SignIn {
 
             switch (option) {
                 case 1:
-                    CreateClub.createClub(connection);
+                    AssistantService.createClub(connection);
                     break;
                 case 2:
-                    ViewClubs.viewClubList(connection);
+                    CommonService.viewClubList(connection);
                     break;
                 case 3:
-                    ViewClubMembers.viewClubMembers(connection);
+                    AssistantService.viewClubMembers(connection);
                     break;
                 case 4:
-                    ViewStudents.viewStudentList(connection);
+                    AssistantService.viewStudentList(connection);
                     break;
                 case 5:
-                    ViewProfessors.viewProfessorList(connection);
+                    AssistantService.viewProfessorList(connection);
                     break;
                 case 6:
-                    ViewAssistants.viewAssistantList(connection);
+                    AssistantService.viewAssistantList(connection);
                     break;
                 case 7:
                     return;
@@ -182,5 +312,4 @@ public class SignIn {
             }
         }
     }
-
 }

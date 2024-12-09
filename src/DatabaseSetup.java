@@ -1,5 +1,3 @@
-package Main;
-
 import java.sql.*;
 import java.io.BufferedReader;
 import java.io.FileReader;

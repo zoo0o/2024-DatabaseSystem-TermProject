@@ -1,10 +1,10 @@
-package Main;
+package service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-public class ViewClubs {
+public class CommonService {
 
     public static void viewClubList(Connection connection) {
         String query = "SELECT cid, name, is_academic, location, president_sid, advisor_pid FROM club";
