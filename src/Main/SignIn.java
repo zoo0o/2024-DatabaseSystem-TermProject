@@ -36,7 +36,7 @@ public class SignIn {
                 idColumn = "aid";
                 break;
             default:
-                System.out.println("Invalid user type choice.");
+                System.out.println("Invalid selection.");
                 return;
         }
 
@@ -56,7 +56,7 @@ public class SignIn {
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
                         System.out.println("Login successful!");
-                        grantAccess(userType);
+                        grantAccess(userType, id, connection);
                     } else {
                         System.out.println("Invalid ID or Password.");
                     }
@@ -68,16 +68,44 @@ public class SignIn {
         }
     }
 
-    private static void grantAccess(int userType) {
+    private static void grantAccess(int userType, int userId, Connection connection) {
         switch (userType) {
             case 1:
+                System.out.println("Access granted: Student.");
                 break;
             case 2:
+                System.out.println("Access granted: Professor.");
                 break;
             case 3:
+                System.out.println("Access granted: Assistant.");
+                assistantOptions(userId, connection);
                 break;
             default:
                 System.out.println("Unknown user type.");
+        }
+    }
+
+    private static void assistantOptions(int userId, Connection connection) {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n=== Assistant Options ===");
+            System.out.println("1. Create Club");
+            System.out.println("2. Exit");
+            System.out.print("Select option: ");
+            int option = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (option) {
+                case 1:
+                    CreateClub.createClub(connection);
+                    break;
+                case 2:
+                    System.out.println("Exiting Assistant Options.");
+                    return;
+                default:
+                    System.out.println("Invalid selection.");
+            }
         }
     }
 }

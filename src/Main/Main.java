@@ -14,11 +14,11 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print("Create the database? (y/n): ");
+        System.out.print("Do you want to initialize database? (y/n): ");
         String input = scanner.nextLine().trim();
 
         if (input.equalsIgnoreCase("y")) {
-            System.out.println("Initializing the database...");
+            System.out.println("Initializing database...");
             DatabaseSetup.initialize();
             System.out.println("Database initialization complete.");
         } else {
@@ -30,18 +30,27 @@ public class Main {
 
             System.out.println("Connected to database 'clubdb'.");
 
-            System.out.println("1. Sign Up");
-            System.out.println("2. Sign In");
-            System.out.print("Choose an option: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+            while (true) {
+                System.out.println("\n1. Sign Up");
+                System.out.println("2. Sign In");
+                System.out.println("3. Exit");
+                System.out.print("Select option: ");
+                int option = scanner.nextInt();
+                scanner.nextLine();
 
-            if (choice == 1) {
-                SignUp.signUp(connection);
-            } else if (choice == 2) {
-                SignIn.signIn(connection);
-            } else {
-                System.out.println("Invalid choice.");
+                switch (option) {
+                    case 1:
+                        SignUp.signUp(connection);
+                        break;
+                    case 2:
+                        SignIn.signIn(connection);
+                        break;
+                    case 3:
+                        System.out.println("Exiting program!");
+                        return;
+                    default:
+                        System.out.println("Invalid selection. Please try again.");
+                }
             }
 
         } catch (Exception e) {

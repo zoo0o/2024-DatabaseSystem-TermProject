@@ -36,7 +36,7 @@ public class SignUp {
                 idColumn = "aid";
                 break;
             default:
-                System.out.println("Invalid user type choice.");
+                System.out.println("Invalid user type.");
                 return;
         }
 
@@ -51,7 +51,7 @@ public class SignUp {
         String confirmPassword = scanner.nextLine();
 
         while (!password.equals(confirmPassword)) {
-            System.out.println("Passwords do not match. Please try again.");
+            System.out.println("Passwords do not match. Try again.");
 
             System.out.print("Enter Password: ");
             password = scanner.nextLine();
@@ -74,7 +74,7 @@ public class SignUp {
             System.out.println("1. 재학");
             System.out.println("2. 휴학");
             System.out.println("3. 졸업");
-            System.out.print("Select Status: ");
+            System.out.print("Select status: ");
             int statusChoice = scanner.nextInt();
             scanner.nextLine();
 
@@ -89,7 +89,7 @@ public class SignUp {
                     status = "졸업";
                     break;
                 default:
-                    System.out.println("Invalid status choice.");
+                    System.out.println("Invalid status.");
                     return;
             }
         }
@@ -116,7 +116,7 @@ public class SignUp {
 
                 int rows = statement.executeUpdate();
                 if (rows > 0) {
-                    System.out.println("signed up successfully!");
+                    System.out.println("Signed up successfully!");
                 }
             }
         } catch (Exception e) {

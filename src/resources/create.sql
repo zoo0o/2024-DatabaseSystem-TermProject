@@ -19,19 +19,20 @@ CREATE TABLE professor (
 );
 
 CREATE TABLE club (
-                      cid INT PRIMARY KEY,
+                      cid INT AUTO_INCREMENT PRIMARY KEY,
                       name VARCHAR(100) NOT NULL,
                       is_academic BOOLEAN NOT NULL,
                       location VARCHAR(255),
-                      mgr_pid INT,
-                      FOREIGN KEY (mgr_pid) REFERENCES professor(pid)
+                      president_sid INT,
+                      advisor_pid INT,
+                      FOREIGN KEY (president_sid) REFERENCES student(sid),
+                      FOREIGN KEY (advisor_pid) REFERENCES professor(pid)
 );
 
 CREATE TABLE clubmember (
                             sid INT,
                             cid INT,
                             join_date DATE,
-                            role VARCHAR(50) DEFAULT 'member',
                             PRIMARY KEY (sid, cid),
                             FOREIGN KEY (sid) REFERENCES student(sid),
                             FOREIGN KEY (cid) REFERENCES club(cid)
@@ -60,6 +61,7 @@ CREATE TABLE submit (
                         FOREIGN KEY (did) REFERENCES document(did),
                         FOREIGN KEY (cid) REFERENCES club(cid)
 );
+
 CREATE TABLE approve (
                          did INT,
                          aid INT,
