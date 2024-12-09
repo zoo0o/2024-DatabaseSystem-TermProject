@@ -135,6 +135,7 @@ public class SignIn {
             }
         }
     }
+
     private static void assistantOptions(int userId, Connection connection) {
         Scanner scanner = new Scanner(System.in);
 
@@ -142,10 +143,11 @@ public class SignIn {
             System.out.println("\n=== Assistant Options ===");
             System.out.println("1. Create Club");
             System.out.println("2. View Club List");
-            System.out.println("3. View Student List");
-            System.out.println("4. View Professor List");
-            System.out.println("5. View Assistant List");
-            System.out.println("6. Sign Out");
+            System.out.println("3. View Club Members");
+            System.out.println("4. View Student List");
+            System.out.println("5. View Professor List");
+            System.out.println("6. View Assistant List");
+            System.out.println("7. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -158,19 +160,23 @@ public class SignIn {
                     ViewClubs.viewClubList(connection);
                     break;
                 case 3:
-                    ViewStudents.viewStudentList(connection);
+                    ViewClubMembers.viewClubMembers(connection);
                     break;
                 case 4:
-                    ViewProfessors.viewProfessorList(connection);
+                    ViewStudents.viewStudentList(connection);
                     break;
                 case 5:
-                    ViewAssistants.viewAssistantList(connection);
+                    ViewProfessors.viewProfessorList(connection);
                     break;
                 case 6:
+                    ViewAssistants.viewAssistantList(connection);
+                    break;
+                case 7:
                     return;
                 default:
                     System.out.println("Invalid selection.");
             }
         }
     }
+
 }
