@@ -96,7 +96,8 @@ public class SignIn {
         while (true) {
             System.out.println("\n=== Student Options ===");
             System.out.println("1. View Club List");
-            System.out.println("2. Sign Out");
+            System.out.println("2. Join a Club");
+            System.out.println("3. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -106,6 +107,9 @@ public class SignIn {
                     ViewClubs.viewClubList(connection);
                     break;
                 case 2:
+                    JoinClub.joinClub(userId, connection);
+                    break;
+                case 3:
                     return;
                 default:
                     System.out.println("Invalid selection.");
