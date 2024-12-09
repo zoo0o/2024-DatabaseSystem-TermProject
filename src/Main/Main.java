@@ -2,36 +2,50 @@ package Main;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Scanner;
 
 public class Main {
 
     public static void main(String[] args) {
-        String jdbcURL = "jdbc:mysql://192.168.56.101:3308";
+        String databaseURL = "jdbc:mysql://192.168.56.101:3308/clubdb";
         String username = "kimjiyu";
         String password = "1234";
-        String databaseName = "clubdb";
 
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password); Statement statement = connection.createStatement()) {
+        Scanner scanner = new Scanner(System.in);
 
-            String checkDatabaseSQL = "SHOW DATABASES LIKE '" + databaseName + "'";
-            try (ResultSet resultSet = statement.executeQuery(checkDatabaseSQL)) {
-                if (resultSet.next()) {
-                    System.out.println("Database '" + databaseName + "' already exists.");
-                } else {
-                    System.out.println("Database '" + databaseName + "' does not exist. Initializing...");
-                    DatabaseSetup.initialize();
-                    System.out.println("Database initialized successfully!");
-                }
+        System.out.print("Create the database? (y/n): ");
+        String input = scanner.nextLine().trim();
+
+        if (input.equalsIgnoreCase("y")) {
+            System.out.println("Initializing the database...");
+            DatabaseSetup.initialize();
+            System.out.println("Database initialization complete.");
+        } else {
+            System.out.println("Skipping database initialization.");
+        }
+
+        try (Connection connection = DriverManager.getConnection(databaseURL, username, password);
+             Statement statement = connection.createStatement()) {
+
+            System.out.println("Connected to database 'clubdb'.");
+
+            System.out.println("1. Sign Up");
+            System.out.println("2. Sign In");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            if (choice == 1) {
+                SignUp.signUp(connection);
+            } else if (choice == 2) {
+                SignIn.signIn(connection);
+            } else {
+                System.out.println("Invalid choice.");
             }
 
-            String useDatabaseSQL = "USE " + databaseName;
-            statement.execute(useDatabaseSQL);
-
-            SignUp.signUp(connection);
         } catch (Exception e) {
-            System.out.println("Error occurred.");
+            System.out.println("Error occurred while connecting to 'clubdb'.");
             e.printStackTrace();
         }
     }
