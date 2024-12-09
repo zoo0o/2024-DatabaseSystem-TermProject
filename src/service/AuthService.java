@@ -279,13 +279,13 @@ public class AuthService {
                         System.out.println("Invalid selection.");
                     }
                     break;
-//                case 8:
-//                    if (isPresident) {
-//                        PresidentService.manageDocuments(clubId, connection);
-//                    } else {
-//                        System.out.println("Invalid selection.");
-//                    }
-//                    break;
+                case 8:
+                    if (isPresident) {
+                        PresidentService.manageDocuments(clubId, connection);
+                    } else {
+                        System.out.println("Invalid selection.");
+                    }
+                    break;
                 default:
                     System.out.println("Invalid selection.");
             }
@@ -321,7 +321,7 @@ public class AuthService {
         while (true) {
             System.out.println("\n=== Assistant Options ===");
             System.out.println("1. Create Club");
-            System.out.println("2. View Club List");
+            System.out.println("2. Manage Documents");
             System.out.println("3. View Club Members");
             System.out.println("4. View Student List");
             System.out.println("5. View Professor List");
@@ -336,7 +336,7 @@ public class AuthService {
                     AssistantService.createClub(connection);
                     break;
                 case 2:
-                    CommonService.viewClubList(connection);
+                    AssistantService.manageDocuments(userId, connection);
                     break;
                 case 3:
                     AssistantService.viewClubMembers(connection);
