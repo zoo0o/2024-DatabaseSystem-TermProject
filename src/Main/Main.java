@@ -31,7 +31,8 @@ public class Main {
             System.out.println("Connected to database 'clubdb'.");
 
             while (true) {
-                System.out.println("\n1. Sign Up");
+                System.out.println("\n=== Main Options ===");
+                System.out.println("1. Sign Up");
                 System.out.println("2. Sign In");
                 System.out.println("3. Exit");
                 System.out.print("Select option: ");

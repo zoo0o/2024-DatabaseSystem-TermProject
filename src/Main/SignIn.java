@@ -14,6 +14,7 @@ public class SignIn {
         System.out.println("1. Student");
         System.out.println("2. Professor");
         System.out.println("3. Assistant");
+        System.out.println("4. Back to Main Options");
         System.out.print("Select user type: ");
 
         int userType = scanner.nextInt();
@@ -35,6 +36,8 @@ public class SignIn {
                 tableName = "assistant";
                 idColumn = "aid";
                 break;
+            case 4:
+                return;
             default:
                 System.out.println("Invalid selection.");
                 return;
@@ -91,7 +94,8 @@ public class SignIn {
         while (true) {
             System.out.println("\n=== Assistant Options ===");
             System.out.println("1. Create Club");
-            System.out.println("2. Exit");
+            System.out.println("2. View Student List");
+            System.out.println("3. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -101,7 +105,9 @@ public class SignIn {
                     CreateClub.createClub(connection);
                     break;
                 case 2:
-                    System.out.println("Exiting Assistant Options.");
+                    ViewStudents.viewStudentList(connection);
+                    break;
+                case 3:
                     return;
                 default:
                     System.out.println("Invalid selection.");

@@ -12,6 +12,7 @@ public class SignUp {
         System.out.println("1. Student");
         System.out.println("2. Professor");
         System.out.println("3. Assistant");
+        System.out.println("4. Back to Main Options");
         System.out.print("Select user type: ");
 
         int userType = scanner.nextInt();
@@ -35,6 +36,8 @@ public class SignUp {
                 tableName = "assistant";
                 idColumn = "aid";
                 break;
+            case 4:
+                return;
             default:
                 System.out.println("Invalid user type.");
                 return;

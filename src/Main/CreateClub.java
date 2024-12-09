@@ -92,6 +92,11 @@ public class CreateClub {
             }
 
             System.out.println("Club created successfully!");
+            System.out.println("Club Name: " + clubName);
+            System.out.println("Academic Club: " + (isAcademic ? "Yes" : "No"));
+            System.out.println("Location: " + location);
+            System.out.println("President Student ID: " + presidentSid);
+            System.out.println("Advisor Professor ID: " + advisorPid);
 
         } catch (Exception e) {
             System.out.println("Error occurred while creating club.");
