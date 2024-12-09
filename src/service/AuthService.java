@@ -1,9 +1,5 @@
 package service;
 
-import Main.CreateClub;
-import Main.JoinClub;
-import Main.view.*;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -215,6 +211,28 @@ public class AuthService {
     private static void studentOptions(int userId, Connection connection) {
         Scanner scanner = new Scanner(System.in);
 
+        boolean isPresident = false;
+        int clubId = 0;
+        String clubName = "";
+
+        try {
+            String checkPresidentSql = "SELECT cid, name FROM club WHERE president_sid = ?";
+            try (PreparedStatement statement = connection.prepareStatement(checkPresidentSql)) {
+                statement.setInt(1, userId);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        isPresident = true;
+                        clubId = resultSet.getInt("cid");
+                        clubName = resultSet.getString("name");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while checking president status.");
+            e.printStackTrace();
+        }
+
         while (true) {
             System.out.println("\n=== Student Options ===");
             System.out.println("1. View Club List");
@@ -222,6 +240,12 @@ public class AuthService {
             System.out.println("3. Join Club");
             System.out.println("4. Leave Club");
             System.out.println("5. Sign Out");
+            if (isPresident) {
+                System.out.printf(">> Club [%s] Manage\n", clubName);
+                System.out.println("6. Edit Club Information");
+                System.out.println("7. View Members");
+                System.out.println("8. Manage Documents");
+            }
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -241,6 +265,27 @@ public class AuthService {
                     break;
                 case 5:
                     return;
+                case 6:
+                    if (isPresident) {
+                        PresidentService.editClubInformation(clubId, connection);
+                    } else {
+                        System.out.println("Invalid selection.");
+                    }
+                    break;
+//                case 7:
+//                    if (isPresident) {
+//                        PresidentService.viewClubMembers(clubId, connection);
+//                    } else {
+//                        System.out.println("Invalid selection.");
+//                    }
+//                    break;
+//                case 8:
+//                    if (isPresident) {
+//                        PresidentService.manageDocuments(clubId, connection);
+//                    } else {
+//                        System.out.println("Invalid selection.");
+//                    }
+//                    break;
                 default:
                     System.out.println("Invalid selection.");
             }
