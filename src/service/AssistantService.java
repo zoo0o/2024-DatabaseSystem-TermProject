@@ -68,11 +68,99 @@ public class AssistantService {
         }
     }
 
+    public static void deleteClub(Connection connection) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("\n=== Delete Club ===");
+        System.out.print("Enter the Club ID to delete: ");
+        int clubId = scanner.nextInt();
+        scanner.nextLine();
+
+        try {
+            String checkClubQuery = "SELECT name FROM club WHERE cid = ?";
+            String clubName = null;
+
+            try (PreparedStatement checkStmt = connection.prepareStatement(checkClubQuery)) {
+                checkStmt.setInt(1, clubId);
+                try (ResultSet resultSet = checkStmt.executeQuery()) {
+                    if (!resultSet.next()) {
+                        System.out.println("Club not found with ID: " + clubId);
+                        return;
+                    } else {
+                        clubName = resultSet.getString("name");
+                        System.out.println("Found Club: " + clubName);
+                    }
+                }
+            }
+
+            System.out.print("To confirm deletion, type the club name exactly as shown: ");
+            String confirmationName = scanner.nextLine();
+
+            if (!confirmationName.equals(clubName)) {
+                System.out.println("Club name mismatch. Deletion canceled.");
+                return;
+            }
+
+            try {
+                connection.setAutoCommit(false);
+
+                String deleteClubMembersQuery = "DELETE FROM clubmember WHERE cid = ?";
+                try (PreparedStatement deleteMembersStmt = connection.prepareStatement(deleteClubMembersQuery)) {
+                    deleteMembersStmt.setInt(1, clubId);
+                    deleteMembersStmt.executeUpdate();
+                }
+
+                String deleteDocumentsQuery = "DELETE FROM document WHERE submit_cid = ?";
+                try (PreparedStatement deleteDocsStmt = connection.prepareStatement(deleteDocumentsQuery)) {
+                    deleteDocsStmt.setInt(1, clubId);
+                    deleteDocsStmt.executeUpdate();
+                }
+
+                String deleteClubQuery = "DELETE FROM club WHERE cid = ?";
+                try (PreparedStatement deleteClubStmt = connection.prepareStatement(deleteClubQuery)) {
+                    deleteClubStmt.setInt(1, clubId);
+                    int rowsDeleted = deleteClubStmt.executeUpdate();
+                    if (rowsDeleted > 0) {
+                        System.out.println("Club and related data deleted successfully.");
+                    } else {
+                        System.out.println("Failed to delete the club.");
+                    }
+                }
+
+                connection.commit(); // Commit transaction
+            } catch (Exception e) {
+                connection.rollback(); // Rollback transaction on error
+                System.out.println("Error occurred while deleting club. Transaction rolled back.");
+                e.printStackTrace();
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while deleting club.");
+            e.printStackTrace();
+        }
+    }
+
     public static void viewClubMembers(Connection connection) {
         Scanner scanner = new Scanner(System.in);
 
         System.out.print("Enter Club Name: ");
         String clubName = scanner.nextLine();
+
+        String checkClubQuery = "SELECT COUNT(*) AS count FROM club WHERE name = ?";
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkClubQuery)) {
+            checkStmt.setString(1, clubName);
+            try (ResultSet resultSet = checkStmt.executeQuery()) {
+                if (resultSet.next() && resultSet.getInt("count") == 0) {
+                    System.out.println("The club '" + clubName + "' does not exist.");
+                    return;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while checking club existence.");
+            e.printStackTrace();
+            return;
+        }
 
         String query = "SELECT s.sid, s.name, s.department, s.status, s.phone " +
                 "FROM clubmember cm " +
@@ -85,7 +173,10 @@ public class AssistantService {
             try (ResultSet rs = stmt.executeQuery()) {
                 System.out.println("\n=== Members of " + clubName + " ===");
                 System.out.println("ID | Name | Department | Status | Phone");
+                boolean hasMembers = false;
+
                 while (rs.next()) {
+                    hasMembers = true;
                     int studentId = rs.getInt("sid");
                     String name = rs.getString("name");
                     String department = rs.getString("department");
@@ -94,12 +185,17 @@ public class AssistantService {
 
                     System.out.println(studentId + " | " + name + " | " + department + " | " + status + " | " + phone);
                 }
+
+                if (!hasMembers) {
+                    System.out.println("No members found in this club.");
+                }
             }
         } catch (Exception e) {
             System.out.println("Error occurred while fetching club members.");
             e.printStackTrace();
         }
     }
+
 
     public static void viewStudentList(Connection connection) {
         String query = "SELECT sid, name, department, status, phone FROM student";

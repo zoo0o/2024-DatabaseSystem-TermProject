@@ -327,13 +327,15 @@ public class AuthService {
         while (true) {
             System.out.println("\n=== Assistant Options ===");
             System.out.println("1. Create Club");
-            System.out.println("2. Manage Documents");
-            System.out.println("3. View Club Members");
-            System.out.println("4. View Student List");
-            System.out.println("5. View Professor List");
-            System.out.println("6. View Assistant List");
-            System.out.println("7. Update My Profile");
-            System.out.println("8. Sign Out");
+            System.out.println("2. Delete Club");
+            System.out.println("3. Manage Documents");
+            System.out.println("4. View Club List");
+            System.out.println("5. View Club Members List");
+            System.out.println("6. View Student List");
+            System.out.println("7. View Professor List");
+            System.out.println("8. View Assistant List");
+            System.out.println("9. Update My Profile");
+            System.out.println("10. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -343,30 +345,37 @@ public class AuthService {
                     AssistantService.createClub(connection);
                     break;
                 case 2:
-                    AssistantService.manageDocuments(userId, connection);
+                    AssistantService.deleteClub(connection);
                     break;
                 case 3:
-                    AssistantService.viewClubMembers(connection);
+                    AssistantService.manageDocuments(userId, connection);
                     break;
                 case 4:
-                    AssistantService.viewStudentList(connection);
+                    CommonService.viewClubList(connection);
                     break;
                 case 5:
-                    AssistantService.viewProfessorList(connection);
+                    AssistantService.viewClubMembers(connection);
                     break;
                 case 6:
-                    AssistantService.viewAssistantList(connection);
+                    AssistantService.viewStudentList(connection);
                     break;
                 case 7:
+                    AssistantService.viewProfessorList(connection);
+                    break;
+                case 8:
+                    AssistantService.viewAssistantList(connection);
+                    break;
+                case 9:
                     updateProfile(connection, 3, userId);
                     return;
-                case 8:
+                case 10:
                     return;
                 default:
                     System.out.println("Invalid selection.");
             }
         }
     }
+
 
     public static void updateProfile(Connection connection, int userType, int userId) {
         Scanner scanner = new Scanner(System.in);

@@ -78,6 +78,11 @@ public class StudentService {
             return;
         }
 
+        if (isClubPresident(studentId, clubId, connection)) {
+            System.out.println("You are the president of this club. You cannot leave the club.");
+            return;
+        }
+
         try {
             String deleteSQL = "DELETE FROM clubmember WHERE sid = ? AND cid = ?";
             try (PreparedStatement stmt = connection.prepareStatement(deleteSQL)) {
@@ -95,6 +100,22 @@ public class StudentService {
             e.printStackTrace();
         }
     }
+
+    private static boolean isClubPresident(int studentId, int clubId, Connection connection) {
+        String query = "SELECT COUNT(*) AS count FROM club WHERE president_sid = ? AND cid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, studentId);
+            stmt.setInt(2, clubId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt("count") > 0;
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while checking club presidency.");
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
     private static int getClubIdByName(String clubName, Connection connection) {
         String query = "SELECT cid FROM club WHERE name = ?";
