@@ -74,9 +74,7 @@ public class AuthService {
 
         String status = null;
         if (isStudent) {
-            System.out.println("1. 재학");
-            System.out.println("2. 휴학");
-            System.out.println("3. 졸업");
+            System.out.println("1. 재학   2. 휴학   3. 졸업");
             System.out.print("Select status: ");
             int statusChoice = scanner.nextInt();
             scanner.nextLine();
@@ -283,13 +281,13 @@ public class AuthService {
                         System.out.println("Invalid selection.");
                     }
                     break;
-//                case 9:
-//                    if (isPresident) {
-//                        PresidentService.manageDocuments(clubId, connection);
-//                    } else {
-//                        System.out.println("Invalid selection.");
-//                    }
-//                    break;
+                case 9:
+                    if (isPresident) {
+                        PresidentService.manageDocuments(clubId, connection);
+                    } else {
+                        System.out.println("Invalid selection.");
+                    }
+                    break;
                 default:
                     System.out.println("Invalid selection.");
             }
@@ -446,9 +444,7 @@ public class AuthService {
 
         String status = null;
         if (userType == 1) {
-            System.out.println("1. 재학");
-            System.out.println("2. 휴학");
-            System.out.println("3. 졸업");
+            System.out.println("1. 재학   2. 휴학   3. 졸업");
             System.out.print("Select New Status (Leave blank to skip): ");
             String statusChoice = scanner.nextLine();
             switch (statusChoice) {
