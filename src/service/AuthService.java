@@ -241,10 +241,10 @@ public class AuthService {
             System.out.println("4. Leave Club");
             System.out.println("5. Sign Out");
             if (isPresident) {
-                System.out.printf(">> Club [%s] Manage\n", clubName);
-                System.out.println("6. Edit Club Information");
-                System.out.println("7. View Members");
-                System.out.println("8. Manage Documents");
+                System.out.printf(">> Club %s Manage\n", clubName);
+                System.out.println("   6. Edit Club Information");
+                System.out.println("   7. View Members");
+                System.out.println("   8. Manage Documents");
             }
             System.out.print("Select option: ");
             int option = scanner.nextInt();
@@ -279,13 +279,13 @@ public class AuthService {
                         System.out.println("Invalid selection.");
                     }
                     break;
-                case 8:
-                    if (isPresident) {
-                        PresidentService.manageDocuments(clubId, connection);
-                    } else {
-                        System.out.println("Invalid selection.");
-                    }
-                    break;
+//                case 8:
+//                    if (isPresident) {
+//                        PresidentService.manageDocuments(clubId, connection);
+//                    } else {
+//                        System.out.println("Invalid selection.");
+//                    }
+//                    break;
                 default:
                     System.out.println("Invalid selection.");
             }
@@ -336,7 +336,7 @@ public class AuthService {
                     AssistantService.createClub(connection);
                     break;
                 case 2:
-                    AssistantService.manageDocuments(userId, connection);
+//                    AssistantService.manageDocuments(userId, connection);
                     break;
                 case 3:
                     AssistantService.viewClubMembers(connection);
