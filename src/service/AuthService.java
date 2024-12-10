@@ -239,12 +239,13 @@ public class AuthService {
             System.out.println("2. View My Club List");
             System.out.println("3. Join Club");
             System.out.println("4. Leave Club");
-            System.out.println("5. Sign Out");
+            System.out.println("5. Update My Profile");
+            System.out.println("6. Sign Out");
             if (isPresident) {
                 System.out.printf(">> Club %s Manage\n", clubName);
-                System.out.println("   6. Edit Club Information");
-                System.out.println("   7. View Members");
-                System.out.println("   8. Manage Documents");
+                System.out.println("   7. Edit Club Information");
+                System.out.println("   8. View Members");
+                System.out.println("   9. Manage Documents");
             }
             System.out.print("Select option: ");
             int option = scanner.nextInt();
@@ -264,22 +265,25 @@ public class AuthService {
                     StudentService.leaveClub(userId, connection);
                     break;
                 case 5:
-                    return;
+                    updateProfile(connection, 1, userId);
+                    break;
                 case 6:
+                    return;
+                case 7:
                     if (isPresident) {
                         PresidentService.editClubInformation(clubId, connection);
                     } else {
                         System.out.println("Invalid selection.");
                     }
                     break;
-                case 7:
+                case 8:
                     if (isPresident) {
                         PresidentService.viewMyClubMembers(clubId, connection);
                     } else {
                         System.out.println("Invalid selection.");
                     }
                     break;
-//                case 8:
+//                case 9:
 //                    if (isPresident) {
 //                        PresidentService.manageDocuments(clubId, connection);
 //                    } else {
@@ -298,7 +302,8 @@ public class AuthService {
         while (true) {
             System.out.println("\n=== Professor Options ===");
             System.out.println("1. View Club List");
-            System.out.println("2. Sign Out");
+            System.out.println("2. Update My Profile");
+            System.out.println("3. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -308,6 +313,9 @@ public class AuthService {
                     CommonService.viewClubList(connection);
                     break;
                 case 2:
+                    updateProfile(connection, 2, userId);
+                    return;
+                case 3:
                     return;
                 default:
                     System.out.println("Invalid selection.");
@@ -326,7 +334,8 @@ public class AuthService {
             System.out.println("4. View Student List");
             System.out.println("5. View Professor List");
             System.out.println("6. View Assistant List");
-            System.out.println("7. Sign Out");
+            System.out.println("7. Update My Profile");
+            System.out.println("8. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -351,10 +360,173 @@ public class AuthService {
                     AssistantService.viewAssistantList(connection);
                     break;
                 case 7:
+                    updateProfile(connection, 3, userId);
+                    return;
+                case 8:
                     return;
                 default:
                     System.out.println("Invalid selection.");
             }
         }
     }
+
+    public static void updateProfile(Connection connection, int userType, int userId) {
+        Scanner scanner = new Scanner(System.in);
+        String tableName = null;
+        String idColumn = null;
+
+        switch (userType) {
+            case 1:
+                tableName = "student";
+                idColumn = "sid";
+                break;
+            case 2:
+                tableName = "professor";
+                idColumn = "pid";
+                break;
+            case 3:
+                tableName = "assistant";
+                idColumn = "aid";
+                break;
+            default:
+                System.out.println("Invalid user type.");
+                return;
+        }
+
+        System.out.println("\n=== Update Profile ===");
+
+        System.out.print("Enter Current Password: ");
+        String currentPassword = scanner.nextLine();
+
+        try {
+            String checkPasswordSql = "SELECT pwd FROM " + tableName + " WHERE " + idColumn + " = ?";
+            try (PreparedStatement checkStatement = connection.prepareStatement(checkPasswordSql)) {
+                checkStatement.setInt(1, userId);
+
+                try (ResultSet resultSet = checkStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String storedPassword = resultSet.getString("pwd");
+                        if (!storedPassword.equals(currentPassword)) {
+                            System.out.println("Current password is incorrect.");
+                            return;
+                        }
+                    } else {
+                        System.out.println("User not found.");
+                        return;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while verifying password.");
+            e.printStackTrace();
+            return;
+        }
+
+        String newPassword = null;
+        System.out.print("Enter New Password (Leave blank to skip): ");
+        String passwordInput = scanner.nextLine();
+        if (!passwordInput.isBlank()) {
+            System.out.print("Confirm New Password: ");
+            String confirmPassword = scanner.nextLine();
+            while (!passwordInput.equals(confirmPassword)) {
+                System.out.println("Passwords do not match. Try again.");
+                System.out.print("Enter New Password: ");
+                passwordInput = scanner.nextLine();
+                System.out.print("Confirm New Password: ");
+                confirmPassword = scanner.nextLine();
+            }
+            newPassword = passwordInput;
+        }
+
+        System.out.print("Enter New Department (Leave blank to skip): ");
+        String department = scanner.nextLine();
+
+        System.out.print("Enter New Phone Number (Leave blank to skip): ");
+        String phone = scanner.nextLine();
+
+        String status = null;
+        if (userType == 1) {
+            System.out.println("1. 재학");
+            System.out.println("2. 휴학");
+            System.out.println("3. 졸업");
+            System.out.print("Select New Status (Leave blank to skip): ");
+            String statusChoice = scanner.nextLine();
+            switch (statusChoice) {
+                case "1":
+                    status = "재학";
+                    break;
+                case "2":
+                    status = "휴학";
+                    break;
+                case "3":
+                    status = "졸업";
+                    break;
+                case "":
+                    break;
+                default:
+                    System.out.println("Invalid status.");
+                    return;
+            }
+        }
+
+        try {
+            StringBuilder sql = new StringBuilder("UPDATE ").append(tableName).append(" SET ");
+            boolean hasUpdates = false;
+
+            if (newPassword != null) {
+                sql.append("pwd = ?, ");
+                hasUpdates = true;
+            }
+            if (!department.isBlank()) {
+                sql.append("department = ?, ");
+                hasUpdates = true;
+            }
+            if (!phone.isBlank()) {
+                sql.append("phone = ?, ");
+                hasUpdates = true;
+            }
+            if (status != null) {
+                sql.append("status = ?, ");
+                hasUpdates = true;
+            }
+
+            if (!hasUpdates) {
+                System.out.println("No changes were made.");
+                return;
+            }
+
+            sql.setLength(sql.length() - 2);
+            sql.append(" WHERE ").append(idColumn).append(" = ?");
+
+            try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+                int paramIndex = 1;
+
+                if (newPassword != null) {
+                    statement.setString(paramIndex++, newPassword);
+                }
+                if (!department.isBlank()) {
+                    statement.setString(paramIndex++, department);
+                }
+                if (!phone.isBlank()) {
+                    statement.setString(paramIndex++, phone);
+                }
+                if (status != null) {
+                    statement.setString(paramIndex++, status);
+                }
+
+                statement.setInt(paramIndex, userId);
+
+                int rows = statement.executeUpdate();
+                if (rows > 0) {
+                    System.out.println("Profile updated successfully!");
+                } else {
+                    System.out.println("Failed to update profile.");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while updating profile.");
+            e.printStackTrace();
+        }
+    }
+
 }
