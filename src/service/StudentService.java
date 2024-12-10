@@ -40,18 +40,36 @@ public class StudentService {
     }
 
     public static void viewMyClubs(int studentId, Connection connection) {
-        String query = "SELECT c.name, c.location, c.is_academic FROM club c " +
-                "JOIN clubmember cm ON c.cid = cm.cid WHERE cm.sid = ?";
+        String query = """
+            SELECT c.cid, c.name, c.is_academic, c.location, 
+                   s.name AS president_name, 
+                   p.name AS advisor_name
+            FROM club c
+            JOIN clubmember cm ON c.cid = cm.cid
+            LEFT JOIN student s ON c.president_sid = s.sid
+            LEFT JOIN professor p ON c.advisor_pid = p.pid
+            WHERE cm.sid = ?
+            """;
+
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, studentId);
             try (ResultSet rs = stmt.executeQuery()) {
+
                 System.out.println("\n=== My Clubs ===");
+                System.out.println("ID | Name | Is Academic | Location | President | Advisor");
+                System.out.println("-------------------------------------------------------------------------------");
+
                 while (rs.next()) {
-                    String clubName = rs.getString("name");
-                    String location = rs.getString("location");
+                    int clubId = rs.getInt("cid");
+                    String name = rs.getString("name");
                     boolean isAcademic = rs.getBoolean("is_academic");
-                    System.out.println("Name: " + clubName + ", Location: " + location +
-                            ", Academic: " + (isAcademic ? "Yes" : "No"));
+                    String location = rs.getString("location");
+                    String presidentName = rs.getString("president_name");
+                    String advisorName = rs.getString("advisor_name");
+
+                    System.out.println(clubId + " | " + name + " | " + (isAcademic ? "Yes" : "No")
+                            + " | " + location + " | " + (presidentName != null ? presidentName : "N/A")
+                            + " | " + (advisorName != null ? advisorName : "N/A"));
                 }
             }
         } catch (Exception e) {
@@ -59,7 +77,6 @@ public class StudentService {
             e.printStackTrace();
         }
     }
-
     public static void leaveClub(int studentId, Connection connection) {
         Scanner scanner = new Scanner(System.in);
 

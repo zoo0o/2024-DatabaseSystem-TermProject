@@ -237,13 +237,14 @@ public class AuthService {
             System.out.println("2. View My Club List");
             System.out.println("3. Join Club");
             System.out.println("4. Leave Club");
-            System.out.println("5. Update My Profile");
-            System.out.println("6. Sign Out");
+            System.out.println("5. View My Profile");
+            System.out.println("6. Update My Profile");
+            System.out.println("7. Sign Out");
             if (isPresident) {
                 System.out.printf(">> Club %s Manage\n", clubName);
-                System.out.println("   7. Edit Club Information");
-                System.out.println("   8. View Members");
-                System.out.println("   9. Manage Documents");
+                System.out.println("   8. Edit Club Information");
+                System.out.println("   9. View Members");
+                System.out.println("   10. Manage Documents");
             }
             System.out.print("Select option: ");
             int option = scanner.nextInt();
@@ -263,25 +264,28 @@ public class AuthService {
                     StudentService.leaveClub(userId, connection);
                     break;
                 case 5:
-                    updateProfile(connection, 1, userId);
+                    viewProfile(connection, 1, userId);
                     break;
                 case 6:
-                    return;
+                    updateProfile(connection, 1, userId);
+                    break;
                 case 7:
+                    return;
+                case 8:
                     if (isPresident) {
                         PresidentService.editClubInformation(clubId, connection);
                     } else {
                         System.out.println("Invalid selection.");
                     }
                     break;
-                case 8:
+                case 9:
                     if (isPresident) {
                         PresidentService.viewMyClubMembers(clubId, connection);
                     } else {
                         System.out.println("Invalid selection.");
                     }
                     break;
-                case 9:
+                case 10:
                     if (isPresident) {
                         PresidentService.manageDocuments(clubId, connection);
                     } else {
@@ -292,6 +296,7 @@ public class AuthService {
                     System.out.println("Invalid selection.");
             }
         }
+
     }
 
     private static void professorOptions(int userId, Connection connection) {
@@ -300,8 +305,13 @@ public class AuthService {
         while (true) {
             System.out.println("\n=== Professor Options ===");
             System.out.println("1. View Club List");
-            System.out.println("2. Update My Profile");
-            System.out.println("3. Sign Out");
+            System.out.println("2. View My Club");
+            System.out.println("3. View My Profile");
+            System.out.println("4. Update My Profile");
+            System.out.println("5. View Student List");
+            System.out.println("6. View Professor List");
+            System.out.println("7. View Assistant List");
+            System.out.println("8. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -311,10 +321,26 @@ public class AuthService {
                     CommonService.viewClubList(connection);
                     break;
                 case 2:
-                    updateProfile(connection, 2, userId);
-                    return;
+                    viewProfessorClubs(userId, connection);
+                    break;
                 case 3:
+                    viewProfile(connection, 2, userId);
+                    break;
+                case 4:
+                    updateProfile(connection, 2, userId);
+                    break;
+                case 5:
+                    AssistantService.viewStudentList(connection);
+                    break;
+                case 6:
+                    AssistantService.viewProfessorList(connection);
+                    break;
+                case 7:
+                    AssistantService.viewAssistantList(connection);
+                    break;
+                case 8:
                     return;
+
                 default:
                     System.out.println("Invalid selection.");
             }
@@ -334,8 +360,9 @@ public class AuthService {
             System.out.println("6. View Student List");
             System.out.println("7. View Professor List");
             System.out.println("8. View Assistant List");
-            System.out.println("9. Update My Profile");
-            System.out.println("10. Sign Out");
+            System.out.println("9. View My Profile");
+            System.out.println("10. Update My Profile");
+            System.out.println("11. Sign Out");
             System.out.print("Select option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -366,13 +393,65 @@ public class AuthService {
                     AssistantService.viewAssistantList(connection);
                     break;
                 case 9:
-                    updateProfile(connection, 3, userId);
-                    return;
+                    viewProfile(connection, 3, userId);
+                    break;
                 case 10:
+                    updateProfile(connection, 3, userId);
+                    break;
+                case 11:
                     return;
                 default:
                     System.out.println("Invalid selection.");
             }
+        }
+    }
+
+
+    public static void viewProfile(Connection connection, int userType, int userId) {
+        String tableName = null;
+        String idColumn = null;
+
+        switch (userType) {
+            case 1:
+                tableName = "student";
+                idColumn = "sid";
+                break;
+            case 2:
+                tableName = "professor";
+                idColumn = "pid";
+                break;
+            case 3:
+                tableName = "assistant";
+                idColumn = "aid";
+                break;
+            default:
+                System.out.println("Invalid user type.");
+                return;
+        }
+
+        try {
+            String sql = "SELECT * FROM " + tableName + " WHERE " + idColumn + " = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, userId);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        System.out.println("\n=== My Profile ===");
+                        System.out.println("ID: " + resultSet.getInt(idColumn));
+                        System.out.println("Name: " + resultSet.getString("name"));
+                        System.out.println("Department: " + resultSet.getString("department"));
+                        System.out.println("Phone: " + resultSet.getString("phone"));
+                        if (userType == 1) { // Student specific field
+                            System.out.println("Status: " + resultSet.getString("status"));
+                        }
+                    } else {
+                        System.out.println("Profile not found.");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while viewing profile.");
+            e.printStackTrace();
         }
     }
 
@@ -530,6 +609,42 @@ public class AuthService {
             }
         } catch (Exception e) {
             System.out.println("Error occurred while updating profile.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void viewProfessorClubs(int professorId, Connection connection) {
+        String query = """
+        SELECT c.cid, c.name, c.is_academic, c.location, 
+               s.name AS president_name
+        FROM club c
+        LEFT JOIN student s ON c.president_sid = s.sid
+        WHERE c.advisor_pid = ?
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, professorId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                System.out.println("\n=== My Club ===");
+                System.out.println("ID | Name | Is Academic | Location | President");
+                System.out.println("------------------------------------------------------------");
+
+                if (rs.next()) {
+                    int clubId = rs.getInt("cid");
+                    String name = rs.getString("name");
+                    boolean isAcademic = rs.getBoolean("is_academic");
+                    String location = rs.getString("location");
+                    String presidentName = rs.getString("president_name");
+
+                    System.out.println(clubId + " | " + name + " | " + (isAcademic ? "Yes" : "No")
+                            + " | " + location + " | " + (presidentName != null ? presidentName : "N/A"));
+                } else {
+                    System.out.println("You are not advising any clubs.");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while retrieving my club.");
             e.printStackTrace();
         }
     }

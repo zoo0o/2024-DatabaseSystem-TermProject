@@ -7,13 +7,20 @@ import java.sql.ResultSet;
 public class CommonService {
 
     public static void viewClubList(Connection connection) {
-        String query = "SELECT cid, name, is_academic, location, president_sid, advisor_pid FROM club";
+        String query = """
+                SELECT c.cid, c.name, c.is_academic, c.location, 
+                       s.name AS president_name, 
+                       p.name AS advisor_name
+                FROM club c
+                LEFT JOIN student s ON c.president_sid = s.sid
+                LEFT JOIN professor p ON c.advisor_pid = p.pid
+                """;
 
         try (PreparedStatement stmt = connection.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
 
             System.out.println("\n=== Club List ===");
-            System.out.println("ID | Name | Is Academic | Location | President | Advisor ");
+            System.out.println("ID | Name | Is Academic | Location | President | Advisor");
             System.out.println("-------------------------------------------------------------------------------");
 
             while (rs.next()) {
@@ -21,11 +28,12 @@ public class CommonService {
                 String name = rs.getString("name");
                 boolean isAcademic = rs.getBoolean("is_academic");
                 String location = rs.getString("location");
-                int presidentId = rs.getInt("president_sid");
-                int advisorId = rs.getInt("advisor_pid");
+                String presidentName = rs.getString("president_name");
+                String advisorName = rs.getString("advisor_name");
 
-                System.out.println(clubId + " | " + name + " | " + (isAcademic ? "Yes" : "No") + " | " + location
-                        + " | " + presidentId + " | " + advisorId);
+                System.out.println(clubId + " | " + name + " | " + (isAcademic ? "Yes" : "No")
+                        + " | " + location + " | " + (presidentName != null ? presidentName : "N/A")
+                        + " | " + (advisorName != null ? advisorName : "N/A"));
             }
 
         } catch (Exception e) {
