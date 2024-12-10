@@ -102,7 +102,7 @@ public class PresidentService {
             System.out.println("2. Resubmit a Rejected Document");
             System.out.println("3. View All Documents");
             System.out.println("4. View Pending and Rejected Documents");
-            System.out.println("5. Back to Students Options");
+            System.out.println("5. Back to Student Options");
             System.out.print("Select an option: ");
             int option = scanner.nextInt();
             scanner.nextLine();
@@ -123,7 +123,7 @@ public class PresidentService {
                 case 5:
                     return;
                 default:
-                    System.out.println("Invalid selection. Please try again.");
+                    System.out.println("Invalid selection.");
             }
         }
     }
@@ -143,7 +143,7 @@ public class PresidentService {
 
         try {
             String sql = "INSERT INTO document (title, type, content, submit_cid, submit_date, is_approved) " +
-                    "VALUES (?, ?, ?, ?, CURDATE(), FALSE)";
+                    "VALUES (?, ?, ?, ?, NOW(), FALSE)";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, title);
                 statement.setString(2, type);
@@ -185,15 +185,27 @@ public class PresidentService {
                     if (resultSet.next()) {
                         boolean isApproved = resultSet.getBoolean("is_approved");
                         String approveAid = resultSet.getString("approve_aid");
+                        String submitDate = resultSet.getString("submit_date");
+                        String approveDate = resultSet.getString("approve_date");
 
-                        if (isApproved || approveAid == null) {
-                            System.out.println("This document is not eligible for resubmission.");
+                        if (isApproved) {
+                            System.out.println("This document has already been approved and cannot be resubmitted.");
                             return;
                         }
 
-                        content = resultSet.getString("content");
-                        System.out.println("\nCurrent Document Content:");
-                        System.out.println(content);
+                        if (approveAid == null && approveDate == null) {
+                            System.out.println("This document is still pending approval and cannot be resubmitted.");
+                            return;
+                        }
+
+                        if (approveAid != null && approveDate != null && !isApproved) {
+                            content = resultSet.getString("content");
+                            System.out.println("\nCurrent Document Content:");
+                            System.out.println(content);
+                        } else {
+                            System.out.println("This document is not in a valid state for resubmission.");
+                            return;
+                        }
                     } else {
                         System.out.println("Invalid document ID.");
                         return;
@@ -201,7 +213,7 @@ public class PresidentService {
                 }
             }
 
-            System.out.print("\nEnter updated document content (Leave blank to cancel resubmission): ");
+            System.out.print("\nEnter updated document content (Leave blank to keep current content): ");
             String updatedContent = scanner.nextLine();
 
             if (updatedContent.isBlank()) {
@@ -209,8 +221,7 @@ public class PresidentService {
                 return;
             }
 
-            String updateSql = "UPDATE document SET content = ?, submit_date = CURDATE(), approve_aid = NULL, approve_date = NULL " +
-                    "WHERE did = ? AND submit_cid = ?";
+            String updateSql = "UPDATE document SET content = ?, submit_date = NOW(), approve_date = NULL, is_approved = FALSE WHERE did = ? AND submit_cid = ?";
             try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
                 updateStatement.setString(1, updatedContent);
                 updateStatement.setInt(2, documentId);
@@ -229,17 +240,18 @@ public class PresidentService {
         }
     }
 
+
     private static void viewAllDocuments(int clubId, Connection connection) {
         System.out.println("\n=== View All Documents ===");
 
         try {
-            String query = "SELECT did, title, type, content, submit_date, approve_date, is_approved " +
+            String query = "SELECT did, title, type, content, submit_date, approve_date, approve_aid, is_approved " +
                     "FROM document WHERE submit_cid = ?";
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, clubId);
 
                 try (ResultSet resultSet = statement.executeQuery()) {
-                    System.out.println("ID | Title | Type | Content | Submit Date | Status");
+                    System.out.println("ID | Title | Type | Content | Submit Date | Status | Approved By");
                     while (resultSet.next()) {
                         int did = resultSet.getInt("did");
                         String title = resultSet.getString("title");
@@ -247,22 +259,20 @@ public class PresidentService {
                         String content = resultSet.getString("content");
                         String submitDate = resultSet.getString("submit_date");
                         String approveDate = resultSet.getString("approve_date");
+                        String approveAid = resultSet.getString("approve_aid");
                         Boolean isApproved = resultSet.getBoolean("is_approved");
 
                         String status;
                         if (approveDate == null) {
-                            status = "Pending";
+                            status = (approveAid == null) ? "Pending (Initial)" : "Pending (Resubmitted)";
                         } else if (isApproved) {
                             status = "Approved";
                         } else {
-                            if (submitDate.compareTo(approveDate) > 0) {
-                                status = "Pending (R)";
-                            } else {
-                                status = "Rejected";
-                            }
+                            status = "Rejected";
                         }
 
-                        System.out.println(did + " | " + title + " | " + type + " | " + content + " | " + submitDate + " | " + status);
+                        System.out.println(did + " | " + title + " | " + type + " | " + content + " | " + submitDate + " | " +
+                                status + " | " + (approveAid != null ? approveAid : "None"));
                     }
                 }
             }
@@ -276,13 +286,13 @@ public class PresidentService {
         System.out.println("\n=== View Pending and Rejected Documents ===");
 
         try {
-            String query = "SELECT did, title, type, content, submit_date, approve_date, is_approved " +
+            String query = "SELECT did, title, type, content, submit_date, approve_date, approve_aid, is_approved " +
                     "FROM document WHERE submit_cid = ? AND is_approved = FALSE";
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, clubId);
 
                 try (ResultSet resultSet = statement.executeQuery()) {
-                    System.out.println("ID | Title | Type | Content | Submit Date | Status");
+                    System.out.println("ID | Title | Type | Content | Submit Date | Status | Approved By");
                     while (resultSet.next()) {
                         int did = resultSet.getInt("did");
                         String title = resultSet.getString("title");
@@ -290,19 +300,17 @@ public class PresidentService {
                         String content = resultSet.getString("content");
                         String submitDate = resultSet.getString("submit_date");
                         String approveDate = resultSet.getString("approve_date");
+                        String approveAid = resultSet.getString("approve_aid");
 
                         String status;
                         if (approveDate == null) {
-                            status = "Pending";
+                            status = (approveAid == null) ? "Pending (Initial)" : "Pending (Resubmitted)";
                         } else {
-                            if (submitDate.compareTo(approveDate) > 0) {
-                                status = "Pending (R)";
-                            } else {
-                                status = "Rejected";
-                            }
+                            status = "Rejected";
                         }
 
-                        System.out.println(did + " | " + title + " | " + type + " | " + content + " | " + submitDate + " | " + status);
+                        System.out.println(did + " | " + title + " | " + type + " | " + content + " | " + submitDate + " | " +
+                                status + " | " + (approveAid != null ? approveAid : "None"));
                     }
                 }
             }

@@ -343,7 +343,7 @@ public class AuthService {
                     AssistantService.createClub(connection);
                     break;
                 case 2:
-//                    AssistantService.manageDocuments(userId, connection);
+                    AssistantService.manageDocuments(userId, connection);
                     break;
                 case 3:
                     AssistantService.viewClubMembers(connection);

@@ -232,4 +232,200 @@ public class AssistantService {
         }
         return true;
     }
+
+    public static void manageDocuments(int assistantId, Connection connection) {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n=== Manage Documents ===");
+            System.out.println("1. View All Documents");
+            System.out.println("2. View Pending Documents");
+            System.out.println("3. Approve or Reject Documents");
+            System.out.println("4. View Documents I Approved or Rejected");
+            System.out.println("5. Back to Assistant Options");
+            System.out.print("Select an option: ");
+            int option = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (option) {
+                case 1:
+                    viewAllDocuments(connection);
+                    break;
+                case 2:
+                    viewPendingDocuments(connection);
+                    break;
+                case 3:
+                    approveOrRejectDocument(assistantId, connection);
+                    break;
+                case 4:
+                    viewMyApprovedOrRejectedDocuments(assistantId, connection);
+                    break;
+                case 5:
+                    return;
+                default:
+                    System.out.println("Invalid selection.");
+            }
+        }
+    }
+
+    private static void viewAllDocuments(Connection connection) {
+        System.out.println("\n=== View All Documents ===");
+
+        try {
+            String query = "SELECT did, title, type, content, submit_date, approve_date, approve_aid, is_approved " +
+                    "FROM document";
+            try (PreparedStatement statement = connection.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                System.out.println("ID | Title | Type | Content | Submit Date | Approve Date | Status | Approved By");
+                while (resultSet.next()) {
+                    int did = resultSet.getInt("did");
+                    String title = resultSet.getString("title");
+                    String type = resultSet.getString("type");
+                    String content = resultSet.getString("content");
+                    String submitDate = resultSet.getString("submit_date");
+                    String approveDate = resultSet.getString("approve_date");
+                    String approveAid = resultSet.getString("approve_aid");
+                    Boolean isApproved = resultSet.getBoolean("is_approved");
+
+                    String status;
+                    if (approveDate == null) {
+                        status = (approveAid == null) ? "Pending (Initial)" : "Pending (Resubmitted)";
+                    } else if (isApproved) {
+                        status = "Approved";
+                    } else {
+                        status = "Rejected";
+                    }
+
+                    System.out.println(did + " | " + title + " | " + type + " | " + content + " | " + submitDate + " | " +
+                            (approveDate != null ? approveDate : "None") + " | " + status + " | " + (approveAid != null ? approveAid : "None"));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching all documents.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void viewPendingDocuments(Connection connection) {
+        System.out.println("\n=== View Pending Documents ===");
+
+        try {
+            String query = "SELECT did, title, type, content, submit_date, approve_aid " +
+                    "FROM document WHERE approve_date IS NULL";
+            try (PreparedStatement statement = connection.prepareStatement(query);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                System.out.println("ID | Title | Type | Content | Submit Date | Status | Approved By");
+                while (resultSet.next()) {
+                    int did = resultSet.getInt("did");
+                    String title = resultSet.getString("title");
+                    String type = resultSet.getString("type");
+                    String content = resultSet.getString("content");
+                    String submitDate = resultSet.getString("submit_date");
+                    String approveAid = resultSet.getString("approve_aid");
+
+                    String status = (approveAid == null) ? "Pending (Initial)" : "Pending (Resubmitted)";
+
+                    System.out.println(did + " | " + title + " | " + type + " | " + content + " | " + submitDate + " | " + status + " | " + (approveAid != null ? approveAid : "None"));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching pending documents.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void approveOrRejectDocument(int assistantId, Connection connection) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("\nEnter the document ID to approve or reject: ");
+        int documentId = scanner.nextInt();
+        scanner.nextLine();
+
+        try {
+            String checkQuery = "SELECT approve_aid, submit_date, approve_date " +
+                    "FROM document WHERE did = ?";
+            try (PreparedStatement checkStatement = connection.prepareStatement(checkQuery)) {
+                checkStatement.setInt(1, documentId);
+
+                try (ResultSet resultSet = checkStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String approveAid = resultSet.getString("approve_aid");
+                        String submitDate = resultSet.getString("submit_date");
+                        String approveDate = resultSet.getString("approve_date");
+
+                        if (approveDate == null) {
+                            if (approveAid != null && Integer.parseInt(approveAid) != assistantId) {
+                                System.out.println("This resubmitted document can only be processed by the assistant who rejected it previously.");
+                                return;
+                            }
+                        } else {
+                            System.out.println("This document is not pending approval or already processed.");
+                            return;
+                        }
+                    } else {
+                        System.out.println("Document not found.");
+                        return;
+                    }
+                }
+            }
+
+            System.out.println("1. Approve");
+            System.out.println("2. Reject");
+            System.out.print("Select an action: ");
+            int action = scanner.nextInt();
+            scanner.nextLine();
+
+            String updateQuery = "UPDATE document SET approve_aid = ?, approve_date = NOW(), is_approved = ? WHERE did = ?";
+            try (PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+                updateStatement.setInt(1, assistantId);
+                updateStatement.setBoolean(2, action == 1);
+                updateStatement.setInt(3, documentId);
+
+                int rows = updateStatement.executeUpdate();
+                if (rows > 0) {
+                    System.out.println(action == 1 ? "Document approved successfully." : "Document rejected successfully.");
+                } else {
+                    System.out.println("Failed to update document status.");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while approving/rejecting the document.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void viewMyApprovedOrRejectedDocuments(int assistantId, Connection connection) {
+        System.out.println("\n=== View Documents I Approved or Rejected ===");
+
+        try {
+            String query = "SELECT did, title, type, content, submit_date, approve_date, is_approved " +
+                    "FROM document WHERE approve_aid = ?";
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setInt(1, assistantId);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    System.out.println("ID | Title | Type | Content | Submit Date | Approve Date | Status");
+                    while (resultSet.next()) {
+                        int did = resultSet.getInt("did");
+                        String title = resultSet.getString("title");
+                        String type = resultSet.getString("type");
+                        String content = resultSet.getString("content");
+                        String submitDate = resultSet.getString("submit_date");
+                        String approveDate = resultSet.getString("approve_date");
+                        Boolean isApproved = resultSet.getBoolean("is_approved");
+
+                        String status = isApproved ? "Approved" : "Rejected";
+
+                        System.out.println(did + " | " + title + " | " + type + " | " + content + " | " + submitDate + " | " +
+                                approveDate + " | " + status);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching documents approved or rejected by you.");
+            e.printStackTrace();
+        }
+    }
 }

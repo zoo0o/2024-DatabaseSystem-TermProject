@@ -3,6 +3,7 @@ import service.AuthService;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Main {
@@ -35,9 +36,19 @@ public class Main {
                 System.out.println("1. Sign Up");
                 System.out.println("2. Sign In");
                 System.out.println("3. Exit");
-                System.out.print("Select option: ");
-                int option = scanner.nextInt();
-                scanner.nextLine();
+
+                int option = -1;
+                while (true) {
+                    System.out.print("Select option: ");
+                    try {
+                        option = scanner.nextInt();
+                        scanner.nextLine();
+                        break;
+                    } catch (InputMismatchException e) {
+                        System.out.println("Invalid input. Please enter a number (1-3).");
+                        scanner.nextLine();
+                    }
+                }
 
                 switch (option) {
                     case 1:
